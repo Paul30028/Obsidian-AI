@@ -1,0 +1,34 @@
+{
+  "name": "obsidian-ai-dashboard",
+  "version": "0.1.0",
+  "description": "Today's Dashboard — an Action/Knowledge/Direction (AKC) command center for Obsidian.",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "css": "tailwindcss -i ./src/styles.css -o ./styles.css --minify",
+    "css:watch": "tailwindcss -i ./src/styles.css -o ./styles.css --watch"
+  },
+  "keywords": ["obsidian", "obsidian-plugin", "dashboard", "ai"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^7.16.1",
+    "@typescript-eslint/parser": "^7.16.1",
+    "autoprefixer": "^10.4.19",
+    "builtin-modules": "^3.3.0",
+    "esbuild": "^0.21.5",
+    "obsidian": "^1.5.7",
+    "postcss": "^8.4.39",
+    "tailwindcss": "^3.4.4",
+    "tslib": "^2.6.3",
+    "typescript": "^5.5.3"
+  },
+  "dependencies": {
+    "lucide-react": "^0.408.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}

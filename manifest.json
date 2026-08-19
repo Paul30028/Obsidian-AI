@@ -1,0 +1,10 @@
+{
+  "id": "obsidian-ai-dashboard",
+  "name": "Today's Dashboard (AKC)",
+  "version": "0.1.0",
+  "minAppVersion": "1.4.0",
+  "description": "Dashboard-first workspace that unifies Action (tasks/12-week goals), Knowledge (Zettelkasten cards) and Direction into one daily view.",
+  "author": "",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}
