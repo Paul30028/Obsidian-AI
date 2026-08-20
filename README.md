@@ -10,6 +10,23 @@ the **AKC model**:
 - **Direction** — a 12-week goal cycle, decomposed into weekly objectives,
   tracked alongside the daily view instead of buried in a separate file.
 
+## 快速开始（一键安装）
+
+前提：装好 [Node.js](https://nodejs.org)，有一个已存在的 Obsidian vault
+文件夹。（要用批量蒸馏功能的话再装 [Python 3](https://python.org)、
+[Ollama](https://ollama.com)——没装也不影响插件本身能用。）
+
+```bash
+git clone https://github.com/Paul30028/Obsidian-AI.git
+cd Obsidian-AI
+./scripts/install.sh /path/to/your/Obsidian/Vault
+```
+
+跑完之后，打开 Obsidian → 设置 → Community plugins → 启用
+"Today's Dashboard (AKC)" 就能用了。详细步骤、逐项验证方式见脚本跑完后打
+印的提示，或本文件后面的「Development」「Pairing with a batch-ingestion
+tool」两节。
+
 ## Project layout
 
 ```
