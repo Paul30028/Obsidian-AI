@@ -16,7 +16,8 @@
 推荐直接用仓库根目录的一键脚本（同时装好插件和这个工具）：
 
 ```bash
-./scripts/install.sh /path/to/your/Obsidian/Vault
+./scripts/install.sh /path/to/your/Obsidian/Vault          # macOS / Linux / Git Bash
+.\scripts\install.ps1 "D:\path\to\your\Obsidian\Vault"      # Windows PowerShell
 ```
 
 或者只装这一个工具：
@@ -32,7 +33,8 @@ cp .env.example .env   # 编辑 .env，把 OBSIDIAN_VAULT 指向你的 vault
 ## 运行
 
 ```bash
-./scripts/start-distill.sh
+./scripts/start-distill.sh          # macOS / Linux / Git Bash
+.\scripts\start-distill.ps1         # Windows PowerShell
 # 或者手动：cd faithdistill && source .venv/bin/activate && streamlit run app.py
 ```
 

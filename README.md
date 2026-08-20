@@ -16,16 +16,29 @@ the **AKC model**:
 文件夹。（要用批量蒸馏功能的话再装 [Python 3](https://python.org)、
 [Ollama](https://ollama.com)——没装也不影响插件本身能用。）
 
+**macOS / Linux / Git Bash：**
 ```bash
 git clone https://github.com/Paul30028/Obsidian-AI.git
 cd Obsidian-AI
 ./scripts/install.sh /path/to/your/Obsidian/Vault
 ```
 
+**Windows（原生 PowerShell，不是 Git Bash）：**
+```powershell
+git clone https://github.com/Paul30028/Obsidian-AI.git
+cd Obsidian-AI
+.\scripts\install.ps1 "D:\path\to\your\Obsidian\Vault"
+```
+如果报错说脚本被禁止运行（"running scripts is disabled"），改用：
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1 "D:\path\to\vault"
+```
+
 跑完之后，打开 Obsidian → 设置 → Community plugins → 启用
 "Today's Dashboard (AKC)" 就能用了。详细步骤、逐项验证方式见脚本跑完后打
 印的提示，或本文件后面的「Development」「Pairing with a batch-ingestion
-tool」两节。
+tool」两节。批量蒸馏工具的启动脚本对应是 `scripts/start-distill.sh`
+（macOS/Linux）或 `scripts\start-distill.ps1`（Windows）。
 
 ## Project layout
 
