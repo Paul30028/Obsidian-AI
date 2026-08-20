@@ -49,7 +49,18 @@ with col1:
             temp_path = Path("data/temp.pdf")
             temp_path.parent.mkdir(exist_ok=True)
             temp_path.write_bytes(uploaded.read())
-            text = Ingester.from_pdf(temp_path)
+
+            # Pages with little/no text layer are OCR'd automatically
+            # (see Ingester.from_pdf) -- first OCR use in a session downloads
+            # PaddleOCR's models, so this can take a while the first time.
+            ocr_status = st.empty()
+
+            def _on_ocr_progress(done: int, total: int) -> None:
+                ocr_status.text(f"正在 OCR 识别扫描页 {done}/{total}...")
+
+            with st.spinner("正在提取 PDF 文字..."):
+                text = Ingester.from_pdf(temp_path, progress_callback=_on_ocr_progress)
+            ocr_status.empty()
 
 with col2:
     st.subheader("2. 蒸馏参数")
