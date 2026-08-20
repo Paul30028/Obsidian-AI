@@ -10,6 +10,13 @@ if [[ ! -d .venv ]]; then
   exit 1
 fi
 
-# shellcheck disable=SC1091
-source .venv/bin/activate
+# A venv created by a native Windows Python (even when invoked from Git Bash)
+# lays out as .venv/Scripts/, not .venv/bin/ — check both.
+if [[ -f .venv/bin/activate ]]; then
+  ACTIVATE=.venv/bin/activate
+else
+  ACTIVATE=.venv/Scripts/activate
+fi
+# shellcheck disable=SC1090
+source "$ACTIVATE"
 streamlit run app.py

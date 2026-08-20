@@ -35,11 +35,30 @@ cp "$REPO_ROOT/manifest.json" "$REPO_ROOT/main.js" "$REPO_ROOT/styles.css" "$PLU
 echo "    已复制 manifest.json / main.js / styles.css 到 $PLUGIN_DIR"
 
 echo "==> 3/4 配置 FaithDistill（批量蒸馏工具，可选）"
-if command -v python3 >/dev/null 2>&1; then
+# Windows Python (from python.org) is usually just "python", not "python3" —
+# macOS/Linux usually have both, with "python" sometimes missing or Python 2.
+PYTHON_BIN=""
+for candidate in python3 python; do
+  if command -v "$candidate" >/dev/null 2>&1 \
+    && "$candidate" -c 'import sys; sys.exit(0 if sys.version_info[0] >= 3 else 1)' 2>/dev/null; then
+    PYTHON_BIN="$candidate"
+    break
+  fi
+done
+
+if [[ -n "$PYTHON_BIN" ]]; then
   cd "$REPO_ROOT/faithdistill"
-  python3 -m venv .venv
-  # shellcheck disable=SC1091
-  source .venv/bin/activate
+  "$PYTHON_BIN" -m venv .venv
+
+  # A venv created by a native Windows Python (even when invoked from Git
+  # Bash) lays out as .venv/Scripts/, not .venv/bin/ — check both.
+  if [[ -f .venv/bin/activate ]]; then
+    ACTIVATE=.venv/bin/activate
+  else
+    ACTIVATE=.venv/Scripts/activate
+  fi
+  # shellcheck disable=SC1090
+  source "$ACTIVATE"
   pip install --quiet -r requirements.txt
   deactivate
   if [[ ! -f .env ]]; then
@@ -51,7 +70,7 @@ if command -v python3 >/dev/null 2>&1; then
   fi
   echo "    FaithDistill 的 Python 环境已就绪（.venv），.env 已指向 $VAULT_PATH"
 else
-  echo "    未检测到 python3，跳过 FaithDistill 安装。之后装了 Python 可单独运行本脚本的这一步。"
+  echo "    未检测到 Python 3（试过 python3、python），跳过 FaithDistill 安装。之后装了 Python 可单独运行本脚本的这一步。"
 fi
 
 echo "==> 4/4 完成"
