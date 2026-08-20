@@ -13,7 +13,8 @@ import {
   updateQuickNoteFrontmatter,
 } from "../lib/vaultAdapter";
 import { completeTask as completeTickTickTask, fetchTodayTasks } from "../lib/ticktickAdapter";
-import { analyzeQuickNote, type ExistingCard } from "../lib/ollamaAdapter";
+import { classifyQuickNote, findRelatedViaEmbedding, type ExistingCard } from "../lib/ollamaAdapter";
+import { findRelatedViaSmartConnections } from "../lib/smartConnectionsAdapter";
 import { emptyDashboardData } from "../lib/mockData";
 import type AkcDashboardPlugin from "../main";
 
@@ -83,6 +84,23 @@ export class DashboardView extends ItemView {
     this.render();
   }
 
+  /**
+   * Prefers the "Smart Connections" community plugin's own vault-wide
+   * embedding index when it's installed (zero extra indexing work for us);
+   * falls back to this plugin's own Ollama-based embedding otherwise.
+   * `existingCards` is empty until a persisted embedding index is built
+   * (see the TODO on `ExistingCard` in ollamaAdapter.ts), so the fallback
+   * path currently returns no suggestions — it's structurally ready, not
+   * yet backed by data.
+   */
+  private async findRelatedLinks(content: string) {
+    const viaSmartConnections = await findRelatedViaSmartConnections(this.app, content, 3);
+    if (viaSmartConnections) return viaSmartConnections;
+
+    const existingCards: ExistingCard[] = [];
+    return findRelatedViaEmbedding(content, existingCards);
+  }
+
   private render(): void {
     this.root?.render(
       <React.StrictMode>
@@ -117,21 +135,23 @@ export class DashboardView extends ItemView {
 
         // AI enrichment runs after the file already exists on disk, so a
         // failed/offline LLM never loses the captured thought.
-        const existingCards: ExistingCard[] = []; // TODO: load from a persisted embedding index
         try {
-          const analysis = await analyzeQuickNote(content, existingCards);
+          const [classification, suggestedLinks] = await Promise.all([
+            classifyQuickNote(content),
+            this.findRelatedLinks(content),
+          ]);
           await updateQuickNoteFrontmatter(this.app, filePath, {
-            cardType: analysis.cardType,
-            tags: analysis.tags,
+            cardType: classification.cardType,
+            tags: classification.tags,
           });
           return {
             id: filePath,
             content,
             createdAt,
             status: "tagged",
-            cardType: analysis.cardType,
-            tags: analysis.tags,
-            suggestedLinks: analysis.suggestedLinks,
+            cardType: classification.cardType,
+            tags: classification.tags,
+            suggestedLinks,
             filePath,
           };
         } catch (err) {
