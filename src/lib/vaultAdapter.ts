@@ -2,6 +2,25 @@ import { App, TFile, TFolder, normalizePath } from "obsidian";
 import type { CardType, MocEntry, QuickNote, Task, TwelveWeekGoal } from "../types/dashboard";
 
 /**
+ * Coerces a frontmatter value to a safe display string, falling back when
+ * it's missing OR not actually a string. This matters because YAML treats
+ * an unquoted `{{...}}` (or other `{`-leading value) as inline-object
+ * syntax, not literal text -- a single vault note with e.g. `title:
+ * {{title}}` in its frontmatter (an unfilled template placeholder) turns
+ * `frontmatter.title` into an object at runtime. Rendering that object
+ * directly as a React child throws ("Objects are not valid as a React
+ * child"), which previously crashed the *entire* dashboard view over one
+ * malformed note instead of just skipping that note's title.
+ */
+function asDisplayString(value: unknown, fallback: string): string {
+  return typeof value === "string" && value.trim() ? value : fallback;
+}
+
+function asFiniteNumber(value: unknown, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+/**
  * Bridges the dashboard's plain data model to the real Obsidian vault:
  * reading task checkboxes + frontmatter, flipping a checkbox in place, and
  * writing new Quick Capture notes as real markdown files with frontmatter.
@@ -170,7 +189,7 @@ export function loadMocEntries(app: App): MocEntry[] {
 
     entries.push({
       id: file.path,
-      title: cache.frontmatter?.title ?? file.basename,
+      title: asDisplayString(cache.frontmatter?.title, file.basename),
       filePath: file.path,
       linkedCardCount,
     });
@@ -225,15 +244,17 @@ export function loadCurrentGoal(app: App): TwelveWeekGoal {
 
   return {
     id: file.path,
-    title: fm.title ?? fallback.title,
+    title: asDisplayString(fm.title, fallback.title),
     cycleStartDate,
     currentWeek: Math.min(Math.max(elapsedWeeks, 1), totalWeeks),
     totalWeeks,
-    objectives: (fm.objectives ?? []).map((o: { title: string; progressPct: number }, i: number) => ({
-      id: `${file.path}#${i}`,
-      title: o.title,
-      progressPct: o.progressPct,
-    })),
+    objectives: (Array.isArray(fm.objectives) ? fm.objectives : []).map(
+      (o: { title?: unknown; progressPct?: unknown }, i: number) => ({
+        id: `${file.path}#${i}`,
+        title: asDisplayString(o?.title, `目标 ${i + 1}`),
+        progressPct: asFiniteNumber(o?.progressPct, 0),
+      })
+    ),
   };
 }
 
