@@ -47,28 +47,62 @@ Copy-Item -Path (Join-Path $RepoRoot "styles.css") -Destination $PluginDir -Forc
 Write-Host "    已复制 manifest.json / main.js / styles.css 到 $PluginDir"
 
 Write-Host "==> 3/4 配置 FaithDistill（批量蒸馏工具，可选）"
-$PythonCmd = Get-Command python -ErrorAction SilentlyContinue
-if (-not $PythonCmd) { $PythonCmd = Get-Command py -ErrorAction SilentlyContinue }
+# paddlepaddle/paddleocr (used for scanned-PDF OCR) only ship wheels up to
+# Python 3.12 as of writing. The `py` launcher's version flags let us pick
+# a known-good interpreter directly instead of whatever "python" resolves
+# to on a machine with multiple Pythons installed (often the newest one,
+# e.g. 3.13/3.14 -- which makes pip install fail with a confusing "No
+# matching distribution found: paddlepaddle").
+$PythonExe = $null
+$PythonExtraArgs = @()
 
-if ($PythonCmd) {
+$PyLauncher = Get-Command py -ErrorAction SilentlyContinue
+if ($PyLauncher) {
+    foreach ($ver in @("-3.12", "-3.11", "-3.10", "-3.13")) {
+        & py $ver -c "import sys" *> $null
+        if ($LASTEXITCODE -eq 0) {
+            $PythonExe = "py"
+            $PythonExtraArgs = @($ver)
+            break
+        }
+    }
+}
+if (-not $PythonExe) {
+    $PythonCmd = Get-Command python -ErrorAction SilentlyContinue
+    if ($PythonCmd) {
+        $PythonExe = "python"
+    } elseif ($PyLauncher) {
+        $PythonExe = "py"
+    }
+}
+
+if ($PythonExe) {
+    $PyVersion = & $PythonExe @PythonExtraArgs -c "import sys; print(f'{sys.version_info[0]}.{sys.version_info[1]}')"
     $FaithDistillDir = Join-Path $RepoRoot "faithdistill"
     Set-Location $FaithDistillDir
-    & $PythonCmd.Source -m venv .venv
+    & $PythonExe @PythonExtraArgs -m venv .venv
     if ($LASTEXITCODE -ne 0) { throw "创建 venv 失败" }
 
     $VenvPip = Join-Path $FaithDistillDir ".venv\Scripts\pip.exe"
     & $VenvPip install --quiet -r requirements.txt
-    if ($LASTEXITCODE -ne 0) { throw "pip install 失败" }
+    $PipExitCode = $LASTEXITCODE
 
-    $EnvFile = Join-Path $FaithDistillDir ".env"
-    if (-not (Test-Path $EnvFile)) {
-        Copy-Item (Join-Path $FaithDistillDir ".env.example") $EnvFile
-        (Get-Content $EnvFile) -replace '^OBSIDIAN_VAULT=.*', "OBSIDIAN_VAULT=$VaultPath" |
-            Set-Content $EnvFile
+    if ($PipExitCode -ne 0) {
+        # Don't throw here -- the plugin install above already succeeded
+        # and its "next steps" summary below should still print.
+        Write-Host "    FaithDistill 依赖安装失败（Python $PyVersion）。若上面提示 paddlepaddle 找不到匹配版本："
+        Write-Host "    PaddleOCR（扫描件识别）目前只支持到 Python 3.12，装一个 3.12 后重跑本脚本即可（会自动优先选中）。"
+    } else {
+        $EnvFile = Join-Path $FaithDistillDir ".env"
+        if (-not (Test-Path $EnvFile)) {
+            Copy-Item (Join-Path $FaithDistillDir ".env.example") $EnvFile
+            (Get-Content $EnvFile) -replace '^OBSIDIAN_VAULT=.*', "OBSIDIAN_VAULT=$VaultPath" |
+                Set-Content $EnvFile
+        }
+        Write-Host "    FaithDistill 的 Python 环境已就绪（.venv，Python $PyVersion），.env 已指向 $VaultPath"
     }
-    Write-Host "    FaithDistill 的 Python 环境已就绪（.venv），.env 已指向 $VaultPath"
 } else {
-    Write-Host "    未检测到 python，跳过 FaithDistill 安装。之后装了 Python 可单独运行本脚本的这一步。"
+    Write-Host "    未检测到 Python，跳过 FaithDistill 安装。之后装了 Python 可单独运行本脚本的这一步。"
 }
 
 Write-Host "==> 4/4 完成"
