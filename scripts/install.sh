@@ -81,8 +81,8 @@ cat <<EOF
   2. 在插件列表里找到 "Today's Dashboard (AKC)"，打开开关启用
   3. （可选）本地跑 Ollama 才能用 AI 打标/复盘功能：
        ollama serve
-       ollama pull llama3.1
-       ollama pull nomic-embed-text
+       ollama pull qwen3:8b
+       ollama pull bge-m3
   4. （可选）要用批量蒸馏功能：
        ./scripts/start-distill.sh
      然后在 Dashboard 顶部指令栏点 "批量蒸馏" 或输入 /distill 一键跳转

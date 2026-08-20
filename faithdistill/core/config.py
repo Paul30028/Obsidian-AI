@@ -23,7 +23,7 @@ class Config:
     # LLM 配置（支持 Ollama 本地 或 OpenAI 兼容接口）
     llm_base_url: str = os.getenv("LLM_BASE_URL", "http://localhost:11434/v1")
     llm_api_key: str = os.getenv("LLM_API_KEY", "ollama")
-    llm_model: str = os.getenv("LLM_MODEL", "qwen2.5:14b")  # 或 llama3.1, deepseek-r1 等
+    llm_model: str = os.getenv("LLM_MODEL", "qwen3:8b")  # 8GB 显存友好；大显存可以换 qwen2.5:14b 等更大模型
 
     # 蒸馏参数
     max_notes_per_chunk: int = 8

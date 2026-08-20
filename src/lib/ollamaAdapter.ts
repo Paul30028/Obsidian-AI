@@ -16,8 +16,12 @@ import type { CardType, SuggestedLink } from "../types/dashboard";
  */
 
 const OLLAMA_HOST = "http://127.0.0.1:11434";
-const CHAT_MODEL = "llama3.1";
-const EMBED_MODEL = "nomic-embed-text";
+// qwen3:8b / bge-m3: chosen for strong Chinese-language performance (this
+// vault's content is Chinese theology/scripture) while comfortably fitting
+// an 8GB-VRAM GPU. Swap these if your hardware or content language differs
+// -- `ollama list` shows what you already have pulled.
+const CHAT_MODEL = "qwen3:8b";
+const EMBED_MODEL = "bge-m3";
 
 /** Minimal shape of an existing card the similarity search compares against.
  *  In production this comes from a persisted embedding index (see

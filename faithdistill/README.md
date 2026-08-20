@@ -54,7 +54,7 @@ cp .env.example .env   # 编辑 .env，把 OBSIDIAN_VAULT 指向你的 vault
 
 ```bash
 ollama serve
-ollama pull qwen2.5:14b   # 或 .env 里配置的其他模型
+ollama pull qwen3:8b   # 或 .env 里配置的其他模型
 ```
 
 也可以把 `.env` 里的 `LLM_BASE_URL`/`LLM_API_KEY`/`LLM_MODEL` 换成任何
