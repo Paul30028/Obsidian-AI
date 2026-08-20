@@ -21,6 +21,20 @@ function asFiniteNumber(value: unknown, fallback: number): number {
 }
 
 /**
+ * Template files (e.g. Templates/moc-template.md) commonly carry the same
+ * cardType frontmatter as the real cards they're a starting point for --
+ * that's what makes "duplicate this file" a usable workflow -- but that
+ * means a naive full-vault cardType scan lists the template itself
+ * (still holding its unfilled `{{title}}` placeholder) as if it were a
+ * real MOC/card. Excluding anything under a top-level "Templates/" folder
+ * keeps those out of the counts without requiring templates to omit
+ * cardType (which would break the duplicate-to-create workflow).
+ */
+function isTemplateFile(path: string): boolean {
+  return path.startsWith("Templates/");
+}
+
+/**
  * Bridges the dashboard's plain data model to the real Obsidian vault:
  * reading task checkboxes + frontmatter, flipping a checkbox in place, and
  * writing new Quick Capture notes as real markdown files with frontmatter.
@@ -179,6 +193,7 @@ export function loadMocEntries(app: App): MocEntry[] {
   const entries: MocEntry[] = [];
 
   for (const file of app.vault.getMarkdownFiles()) {
+    if (isTemplateFile(file.path)) continue;
     const cache = app.metadataCache.getFileCache(file);
     if (cache?.frontmatter?.cardType !== "moc") continue;
 
@@ -202,7 +217,11 @@ export function loadMocEntries(app: App): MocEntry[] {
 export function loadCoreCardCount(app: App): number {
   return app.vault
     .getMarkdownFiles()
-    .filter((file) => app.metadataCache.getFileCache(file)?.frontmatter?.cardType === "core").length;
+    .filter(
+      (file) =>
+        !isTemplateFile(file.path) &&
+        app.metadataCache.getFileCache(file)?.frontmatter?.cardType === "core"
+    ).length;
 }
 
 const GOAL_FILE_PATH = "30-Direction/CurrentGoal.md";
