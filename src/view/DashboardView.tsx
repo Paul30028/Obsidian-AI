@@ -182,6 +182,14 @@ export class DashboardView extends ItemView {
           case "ai-review":
             new Notice("AI 复盘功能待接入");
             return "复盘完成";
+          case "open-distill-tool": {
+            // We deliberately don't launch/manage the tool's process here —
+            // it's a separate program (e.g. a Streamlit app) the user starts
+            // themselves; this just opens its already-running local URL.
+            const url = this.plugin.settings.distillToolUrl;
+            window.open(url, "_blank");
+            return `已在浏览器打开 ${url}`;
+          }
           default:
             return "已执行";
         }

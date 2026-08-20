@@ -5,10 +5,22 @@ export interface AkcDashboardSettings {
   /** OAuth2 access token obtained via the TickTick authorization-code flow.
    *  Populate this from a settings tab; left undefined disables TickTick sync. */
   ticktickAccessToken: string | null;
+
+  /**
+   * Base URL of a locally running batch-distillation tool (e.g. FaithDistill,
+   * a Streamlit app that explodes a whole PDF/article into many atomic notes
+   * in one pass — a different job than this plugin's one-thought-at-a-time
+   * QuickCapture). This plugin does not launch or manage that process; the
+   * user starts it themselves (e.g. `streamlit run app.py`), and the
+   * "打开批量蒸馏工具" skill command just opens this URL. Left as the
+   * Streamlit default so it works with zero configuration for that pairing.
+   */
+  distillToolUrl: string;
 }
 
 const DEFAULT_SETTINGS: AkcDashboardSettings = {
   ticktickAccessToken: null,
+  distillToolUrl: "http://localhost:8501",
 };
 
 export default class AkcDashboardPlugin extends Plugin {

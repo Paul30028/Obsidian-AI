@@ -4,6 +4,7 @@ import {
   Sparkles,
   ListChecks,
   Terminal,
+  FlaskConical,
   type LucideIcon,
 } from "lucide-react";
 import type { IconName } from "../types/dashboard";
@@ -20,6 +21,7 @@ export const iconRegistry: Record<IconName, LucideIcon> = {
   Sparkles,
   ListChecks,
   Terminal,
+  FlaskConical,
 };
 
 export function resolveIcon(name: IconName): LucideIcon {

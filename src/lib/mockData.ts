@@ -47,6 +47,18 @@ export const defaultSkillCommands: DashboardData["skillCommands"] = [
     isRunning: false,
     lastRunAt: null,
   },
+  {
+    id: "open-distill-tool",
+    label: "批量蒸馏",
+    description:
+      "打开本地运行的批量蒸馏工具（如 FaithDistill），把一整篇文章/PDF 一次性拆成多张原子笔记——" +
+      "QuickCapture 是一次一句的闪念速记，这个不一样，是重活儿分给独立工具做。",
+    command: "/distill",
+    category: "ai",
+    icon: "FlaskConical",
+    isRunning: false,
+    lastRunAt: null,
+  },
 ];
 
 export const emptyDashboardData: DashboardData = {

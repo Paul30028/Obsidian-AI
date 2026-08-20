@@ -88,6 +88,12 @@ In short: point the other tool's vault path at the same vault, make it emit
 `cardType` frontmatter instead of its own scheme, and this plugin picks up
 its output automatically on the next vault scan — no import step needed.
 
+For quick access while the two run side by side, the SkillLauncherBar's
+`/distill` command (`open-distill-tool` in `mockData.ts`) opens
+`AkcDashboardSettings.distillToolUrl` (default `http://localhost:8501`, the
+Streamlit default) in the browser — this plugin never launches or manages
+that process, it just assumes you've already started it yourself.
+
 ## Status
 
 Initial frontend scaffold: full type definitions, all four dashboard
