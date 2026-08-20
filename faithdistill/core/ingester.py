@@ -70,7 +70,10 @@ class Ingester:
                 result = ocr.predict(str(img_path))
                 recognized_lines: List[str] = []
                 for page_result in result:
-                    recognized_lines.extend(page_result["res"]["rec_texts"])
+                    # predict() yields flat dict-like result objects
+                    # ("rec_texts" at the top level) -- the "res" nesting
+                    # only exists in .json/save_to_json output, not here.
+                    recognized_lines.extend(page_result["rec_texts"])
                 texts[page_index] = "\n".join(recognized_lines)
 
                 img_path.unlink(missing_ok=True)
