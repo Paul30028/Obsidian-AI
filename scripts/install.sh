@@ -18,6 +18,20 @@ if [[ ! -d "$VAULT_PATH" ]]; then
 fi
 VAULT_PATH="$(cd "$VAULT_PATH" && pwd)"
 
+# On Git Bash/MSYS (Windows), $VAULT_PATH is now a POSIX-style path like
+# /d/note/wy -- fine for bash's own file operations below, but FaithDistill
+# is a native Windows Python program that reads OBSIDIAN_VAULT from .env
+# literally: Path("/d/note/wy") on Windows resolves to \d\note\wy (a "d"
+# folder at the current drive's root), NOT D:\note\wy. cygpath -w (shipped
+# with Git for Windows) converts it to the native form before it's ever
+# written to .env; on real POSIX systems cygpath doesn't exist, so the
+# path is used as-is.
+if command -v cygpath >/dev/null 2>&1; then
+  ENV_VAULT_PATH="$(cygpath -w "$VAULT_PATH")"
+else
+  ENV_VAULT_PATH="$VAULT_PATH"
+fi
+
 echo "==> 1/4 构建 Obsidian 插件"
 if ! command -v npm >/dev/null 2>&1; then
   echo "需要先安装 Node.js（含 npm）：https://nodejs.org" >&2
@@ -82,11 +96,11 @@ if [[ ${#PYTHON_BIN[@]} -gt 0 ]]; then
     if [[ ! -f .env ]]; then
       cp .env.example .env
       # macOS/BSD sed needs -i '', GNU sed needs -i — try GNU first, fall back to BSD
-      sed -i.bak "s#^OBSIDIAN_VAULT=.*#OBSIDIAN_VAULT=$VAULT_PATH#" .env 2>/dev/null \
-        || sed -i '' "s#^OBSIDIAN_VAULT=.*#OBSIDIAN_VAULT=$VAULT_PATH#" .env
+      sed -i.bak "s#^OBSIDIAN_VAULT=.*#OBSIDIAN_VAULT=$ENV_VAULT_PATH#" .env 2>/dev/null \
+        || sed -i '' "s#^OBSIDIAN_VAULT=.*#OBSIDIAN_VAULT=$ENV_VAULT_PATH#" .env
       rm -f .env.bak
     fi
-    echo "    FaithDistill 的 Python 环境已就绪（.venv，Python $PY_VERSION），.env 已指向 $VAULT_PATH"
+    echo "    FaithDistill 的 Python 环境已就绪（.venv，Python $PY_VERSION），.env 已指向 $ENV_VAULT_PATH"
   fi
 else
   echo "    未检测到 Python 3，跳过 FaithDistill 安装。之后装了 Python 可单独运行本脚本的这一步。"
