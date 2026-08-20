@@ -54,6 +54,39 @@ folder, then enable it from Obsidian's Community Plugins settings.
 - **Local LLM (Ollama)**: see `src/lib/ollamaAdapter.ts`. Calls
   `POST /api/generate` (classification/tags) and `POST /api/embeddings`
   (related-card ranking) against `http://127.0.0.1:11434` by default.
+- **Smart Connections** (optional): see `src/lib/smartConnectionsAdapter.ts`.
+  If the community plugin is installed, related-card suggestions reuse its
+  existing vault-wide embedding index instead of recomputing one; falls back
+  to the Ollama path above otherwise.
+
+## Pairing with a batch-ingestion tool (e.g. a distillation pipeline)
+
+This plugin's QuickCapture is deliberately for one thought at a time — it's
+not built to take a whole PDF or article and explode it into a dozen notes in
+one pass. That's a different, heavier job (chunking, batch LLM calls, PDF
+parsing) better done by a separate tool running against the same vault.
+
+Two things make that pairing work with zero glue code, as long as the other
+tool's output matches this contract:
+
+1. **Frontmatter, not folders, is the index.** `vaultAdapter.ts`'s
+   `loadMocEntries` / `loadCoreCardCount` scan the *entire* vault for
+   `cardType: moc` / `cardType: core` frontmatter — they don't care what
+   folder a note lives in. A batch tool can keep its own folder layout
+   (e.g. `03-Permanent-Notes/<theme>/`, `04-Maps-of-Content/`) and its notes
+   will still show up in this plugin's sidebar, as long as it writes
+   `cardType: core` (not some other field name like `type: permanent`) and
+   `cardType: moc` on its index notes.
+2. **`CardType` includes `comparison`** specifically for cross-tradition /
+   cross-source comparison notes (two theological positions, two religions,
+   etc. discussed side by side) — these are structurally different from a
+   `core` note's single atomic claim, so a batch tool that produces this
+   kind of note should tag it `cardType: comparison` rather than force-fitting
+   it into `core`.
+
+In short: point the other tool's vault path at the same vault, make it emit
+`cardType` frontmatter instead of its own scheme, and this plugin picks up
+its output automatically on the next vault scan — no import step needed.
 
 ## Status
 

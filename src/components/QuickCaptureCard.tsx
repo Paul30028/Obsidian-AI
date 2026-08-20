@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { Loader2, Send, Sparkles, Link2 } from "lucide-react";
-import type { QuickNote } from "../types/dashboard";
+import type { CardType, QuickNote } from "../types/dashboard";
+
+const CARD_TYPE_LABELS: Record<CardType, string> = {
+  moc: "索引卡片",
+  reading: "阅读卡片",
+  core: "核心卡片",
+  comparison: "对照卡片",
+};
 
 interface QuickCaptureCardProps {
   notes: QuickNote[];
@@ -73,7 +80,7 @@ export function QuickCaptureCard({ notes, onCapture }: QuickCaptureCardProps) {
 
               {note.cardType && (
                 <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 text-xs text-emerald-400">
-                  {note.cardType === "moc" ? "索引卡片" : note.cardType === "reading" ? "阅读卡片" : "核心卡片"}
+                  {CARD_TYPE_LABELS[note.cardType]}
                 </span>
               )}
 

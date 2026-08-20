@@ -63,8 +63,16 @@ export interface Task {
  *            yet distilled into the writer's own words.
  * - core  -> permanent/evergreen notes: one atomic idea, written in your own
  *            words, is the durable unit the MOCs point to.
+ * - comparison -> cross-tradition comparison notes (e.g. how two religions or
+ *            two theological schools treat the same question). Distinct from
+ *            `core` because it structurally holds two-or-more positions side
+ *            by side rather than a single atomic claim. This value exists so
+ *            notes produced by external batch-ingestion tools (e.g. a bulk
+ *            distillation pipeline writing into the same vault) are
+ *            recognized by this plugin's MOC/card-count scanning without any
+ *            translation step — see vaultAdapter.ts's frontmatter contract.
  */
-export type CardType = "moc" | "reading" | "core";
+export type CardType = "moc" | "reading" | "core" | "comparison";
 
 export type QuickNoteStatus =
   | "draft" // just typed, not yet sent to the LLM
