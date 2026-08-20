@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Root scope injected into the Obsidian workspace leaf. Kept out of Tailwind's
+   preflight (see tailwind.config.js) so it never fights Obsidian's own theme
+   variables (--background-primary, --text-normal, etc.) used elsewhere in the vault. */
+.akc-dashboard {
+  color-scheme: dark;
+}
