@@ -27,6 +27,7 @@ interface InternalPluginsApi {
 export class DashboardView extends ItemView {
   private root: Root | null = null;
   private data: DashboardData = emptyDashboardData;
+  private refreshTimer: number | null = null;
 
   constructor(leaf: WorkspaceLeaf, private plugin: AkcDashboardPlugin) {
     super(leaf);
@@ -49,12 +50,26 @@ export class DashboardView extends ItemView {
     this.render();
     await this.refreshData();
 
-    // Keep the task list in sync with live edits made elsewhere in the vault
-    // (e.g. checking a box directly in the editor).
-    this.registerEvent(this.app.vault.on("modify", () => this.refreshData()));
+    // Keep tasks/MOC/core-card counts in sync with vault changes made
+    // elsewhere: editing a checkbox directly ("modify"), or a separate
+    // process like FaithDistill writing brand-new note files while
+    // Obsidian is open ("create") -- new files only ever fire "create",
+    // never "modify", so listening to "modify" alone (the original bug)
+    // meant newly-distilled notes never showed up in the sidebar counts
+    // until the next full Obsidian restart. Debounced because a batch
+    // distillation run can create dozens of files within seconds, and a
+    // full vault rescan on every single one would be wasteful.
+    const scheduleRefresh = () => {
+      if (this.refreshTimer !== null) window.clearTimeout(this.refreshTimer);
+      this.refreshTimer = window.setTimeout(() => this.refreshData(), 500);
+    };
+    this.registerEvent(this.app.vault.on("modify", scheduleRefresh));
+    this.registerEvent(this.app.vault.on("create", scheduleRefresh));
+    this.registerEvent(this.app.vault.on("delete", scheduleRefresh));
   }
 
   async onClose(): Promise<void> {
+    if (this.refreshTimer !== null) window.clearTimeout(this.refreshTimer);
     this.root?.unmount();
     this.root = null;
   }
