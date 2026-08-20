@@ -6,5 +6,10 @@ python-dotenv>=1.0.0
 pyyaml>=6.0
 tiktoken>=0.7.0
 pymupdf>=1.24.0
-paddlepaddle>=3.0.0
-paddleocr>=3.0.0
+# Pinned exactly (not >=): paddlepaddle 3.3.x has a confirmed regression on
+# CPU inference -- "NotImplementedError: ConvertPirAttribute2RuntimeAttribute
+# not support [pir::ArrayAttribute<pir::DoubleAttribute>]" -- in its PIR+oneDNN
+# code path (github.com/PaddlePaddle/Paddle/issues/77340). 3.2.2 + paddleocr
+# 3.4.1 is the version pair the community confirmed works.
+paddlepaddle==3.2.2
+paddleocr==3.4.1
