@@ -5,6 +5,41 @@ import re
 from .config import config
 from .prompts import ATOMIC_DISTILL_PROMPT
 
+def chunk_text(text: str, chunk_size: int) -> List[str]:
+    """Splits long input (e.g. a whole book's extracted PDF text) into
+    chunks around `chunk_size` characters each, so a single LLM call only
+    ever has to digest one chunk instead of the entire document. Prefers
+    paragraph boundaries (blank-line-separated) so notes aren't split
+    mid-sentence; a single paragraph longer than chunk_size is hard-split
+    as a last resort."""
+    paragraphs = re.split(r"\n\s*\n", text.strip())
+    chunks: List[str] = []
+    current = ""
+
+    for para in paragraphs:
+        para = para.strip()
+        if not para:
+            continue
+
+        if len(para) > chunk_size:
+            if current:
+                chunks.append(current)
+                current = ""
+            for i in range(0, len(para), chunk_size):
+                chunks.append(para[i:i + chunk_size])
+            continue
+
+        if current and len(current) + len(para) + 2 > chunk_size:
+            chunks.append(current)
+            current = para
+        else:
+            current = f"{current}\n\n{para}" if current else para
+
+    if current:
+        chunks.append(current)
+    return chunks
+
+
 class Distiller:
     def __init__(self):
         self.client = OpenAI(

@@ -3,7 +3,7 @@ from pathlib import Path
 from datetime import datetime
 from core.config import config
 from core.ingester import Ingester
-from core.distiller import Distiller
+from core.distiller import Distiller, chunk_text
 from core.note_writer import NoteWriter
 
 st.set_page_config(page_title="FaithDistill", page_icon="✝️", layout="wide")
@@ -64,34 +64,53 @@ if st.button("🚀 开始蒸馏", type="primary", use_container_width=True):
     if not text or len(text.strip()) < 50:
         st.error("请输入有效内容（至少 50 字符）")
     else:
-        with st.spinner("正在调用 LLM 进行原子化蒸馏，请稍候..."):
-            try:
-                distiller = Distiller()
-                writer = NoteWriter()
+        try:
+            distiller = Distiller()
+            writer = NoteWriter()
 
-                notes = distiller.distill(text, theme=theme, religion=religion)
+            # Long input (e.g. a whole book's worth of PDF text) is chunked
+            # before hitting the LLM -- a single call over tens of thousands
+            # of characters routinely fails to follow the strict output
+            # format (especially on smaller local models), which used to
+            # silently produce zero parsed notes with no explanation.
+            chunks = chunk_text(text, config.chunk_size)
 
-                if not notes:
-                    st.warning("未能解析出有效笔记，请尝试换模型或缩短文本。")
-                else:
-                    st.success(f"成功生成 {len(notes)} 张原子笔记！")
+            all_notes = []
+            failed_chunks = []
+            progress = st.progress(0.0)
+            status = st.empty()
 
-                    written_files = []
-                    for note in notes:
-                        path = writer.write_permanent_note(note, theme)
-                        writer.append_to_moc(theme, note["title"])
-                        written_files.append(path)
+            for i, chunk in enumerate(chunks, 1):
+                status.text(f"正在处理第 {i}/{len(chunks)} 段（共 {len(text)} 字）...")
+                chunk_notes = distiller.distill(chunk, theme=theme, religion=religion)
+                if not chunk_notes:
+                    failed_chunks.append(i)
+                for note in chunk_notes:
+                    path = writer.write_permanent_note(note, theme)
+                    writer.append_to_moc(theme, note["title"])
+                    all_notes.append(note)
+                progress.progress(i / len(chunks))
 
-                    st.subheader("生成结果")
-                    for i, note in enumerate(notes, 1):
-                        with st.expander(f"{i}. {note['title']}"):
-                            st.code(note["body"][:800] + ("..." if len(note["body"]) > 800 else ""), language="markdown")
+            status.empty()
+            progress.empty()
 
-                    st.info(f"已写入 Vault：{config.vault_path / config.permanent_dir / theme}")
+            if not all_notes:
+                st.warning("未能解析出有效笔记，请尝试换模型或缩短文本。")
+            else:
+                st.success(f"成功生成 {len(all_notes)} 张原子笔记（共处理 {len(chunks)} 段）！")
+                if failed_chunks:
+                    st.warning(f"第 {', '.join(map(str, failed_chunks))} 段未能解析出笔记（模型输出格式不对或该段内容较少），其余段落正常。")
 
-            except Exception as e:
-                st.error(f"蒸馏失败：{str(e)}")
-                st.exception(e)
+                st.subheader("生成结果")
+                for i, note in enumerate(all_notes, 1):
+                    with st.expander(f"{i}. {note['title']}"):
+                        st.code(note["body"][:800] + ("..." if len(note["body"]) > 800 else ""), language="markdown")
+
+                st.info(f"已写入 Vault：{config.vault_path / config.permanent_dir / theme}")
+
+        except Exception as e:
+            st.error(f"蒸馏失败：{str(e)}")
+            st.exception(e)
 
 st.markdown("---")
 st.caption(f"FaithDistill · Local-First · {datetime.now().strftime('%Y-%m-%d')}")
